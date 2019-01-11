@@ -1,8 +1,7 @@
-# Script para localizar o modelo do processor de servidores Dell
-# Consulta a partir do site dell.com/support
-# Criado por: Nildo Adao 07/01/2019
+#!/usr/bin/env python3
 
-import requests, sys, argparse, BeautifulSoup, json
+import requests, sys, argparse, json
+from bs4 import BeautifulSoup
 
 parser = argparse.ArgumentParser(description="Script em Python para obter o processor de servidores Dell.")
 
@@ -19,7 +18,9 @@ def find_processor(tag):
     try:
         response = requests.get(url)
         results = []
-        soap = BeautifulSoup.BeautifulSoup(response.text)
+        soap = BeautifulSoup(response.text, "html.parser")
+
+        # dell/support carrega as infonmacoes na tag "hdnParts"
         hdn_parts = json.loads(soap.find(id="hdnParts").get("value"))
 
         for item in hdn_parts:
@@ -32,13 +33,11 @@ def find_processor(tag):
     except (Exception) as e:
 
         if(type(e) is requests.exceptions.ConnectionError):
-            print("Falha na comunicacao com dell.com/support, verifique a conexao e tente novamente")
+            raise e
 
         else:
             print("Service Tag: {}, falha ao obter processador".format(tag))
-        return
-
-    
+            return  
 
 if __name__ == "__main__":
     try:
@@ -51,9 +50,15 @@ if __name__ == "__main__":
             for item in tags:
                 find_processor(item)
         else:
-            print("Erro, deve ser fornecido algum parametro para o script\n Ex: find_dell_processor -tag ABCDGG")
-    except:
-        print("Erro, deve ser fornecido algum parametro para o script\n Ex: find_dell_processor -tag ABCDGG")
+            print("Erro, deve ser fornecido algum parametro para o script\nEx: find_dell_processor -tag ABCDGG")
+
+    except (Exception) as e:
+
+        if(type(e) is requests.exceptions.ConnectionError):
+            print("Falha na comunicacao com dell.com/support, verifique a conexao e tente novamente")
+
+        else:
+            print("Service Tag invalida")
 
     sys.exit()
 
