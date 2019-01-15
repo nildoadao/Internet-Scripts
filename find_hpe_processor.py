@@ -24,9 +24,15 @@ def find_processor(tag):
         for item in soap.find_all("span"):
             if "logic cpu" in item.text.lower() and "proc" in previous_tag.text.lower():
                 processor = previous_tag.text
-
             previous_tag = item
         
+        # Em alguns casos o PartSufer da HP nao gera a coluna Logic CPU
+        # Nesse caso e feita a busca direta pelo termo sps-proc
+        if "Nao encontrado" in processor:
+            for item in soap.find_all("span"):
+                if "sps-proc" in item.text.lower():
+                    processor = item.text
+
         print("Serial: {}, Processador: {}".format(tag, processor))
 
     except (Exception) as e:

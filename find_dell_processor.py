@@ -20,15 +20,15 @@ def find_processor(tag):
         results = []
         soap = BeautifulSoup(response.text, "html.parser")
 
-        # dell/support carrega as infonmacoes na tag "hdnParts"
+        # dell/support carrega as informacoes na tag "hdnParts" no formato json
         hdn_parts = json.loads(soap.find(id="hdnParts").get("value"))
 
         for item in hdn_parts:
             for part in item[u"Parts"]:
-                if "processor" in part[u"Description"].lower():
+                if "processor" in part[u"Description"].lower() and "memory" not in item[u"SkuDescription"].lower() and "heat" not in item[u"SkuDescription"].lower():
                     results.append(item[u"SkuDescription"])  
         
-        print("Service Tag: {}, Processador: {}, Quantidade: {}".format(tag, results[0], len(results)))
+        print("Service Tag: {}, Processador: {}".format(tag, results[0]))
 
     except (Exception) as e:
 
