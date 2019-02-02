@@ -26,7 +26,10 @@ def find_processor(tag):
         for item in hdn_parts:
             for part in item[u"Parts"]:
                 if "processor" in part[u"Description"].lower() and "memory" not in item[u"SkuDescription"].lower() and "heat" not in item[u"SkuDescription"].lower():
-                    results.append(item[u"SkuDescription"])  
+                    results.append(item[u"SkuDescription"])
+
+        with open("processadores.csv", mode="a") as f:
+            f.write("{};{}\n".format(tag, results[0]))  
         
         print("Service Tag: {}, Processador: {}".format(tag, results[0]))
 
@@ -36,7 +39,7 @@ def find_processor(tag):
             raise e
 
         else:
-            print("Service Tag: {}, falha ao obter processador".format(tag))
+            print("Service Tag: {}, falha ao obter processador.".format(tag))
             return  
 
 if __name__ == "__main__":

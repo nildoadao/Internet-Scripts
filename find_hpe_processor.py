@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import requests, sys, argparse, json
+import requests, sys, argparse, json, warnings
 from bs4 import BeautifulSoup
+
+warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser(description="Script em Python para obter o processor de servidores HPE.")
 
@@ -13,10 +15,10 @@ args=vars(parser.parse_args())
 def find_processor(tag):
 
     # Link para partsurfer HPE
-    url = "http://partsurfer.hpe.com/Search.aspx?searchText={}".format(tag)
+    url = "https://partsurfer.hpe.com/Search.aspx?searchText={}".format(tag)
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
         soap = BeautifulSoup(response.text, "html.parser")
         previous_tag = soap.find_next("span")
         processor = "Nao encontrado."
@@ -32,6 +34,9 @@ def find_processor(tag):
             for item in soap.find_all("span"):
                 if "sps-proc" in item.text.lower():
                     processor = item.text
+
+        with open("processadores.csv", mode="a") as f:
+            f.write("{};{}\n".format(tag, processor))  
 
         print("Serial: {}, Processador: {}".format(tag, processor))
 
