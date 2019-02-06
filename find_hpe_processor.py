@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import requests, sys, argparse, json, warnings
+import requests, sys, argparse, json, warnings, time
 from bs4 import BeautifulSoup
 
 warnings.filterwarnings("ignore")
@@ -59,6 +59,8 @@ if __name__ == "__main__":
             tags = args["list"].split(",")
             for item in tags:
                 find_processor(item)
+                #Tempo de 6s entre requisições para evitar que a url seja bloqueada
+                time.sleep(6)
         else:
             print("Erro, deve ser fornecido algum parametro para o script\nEx: find_hpe_processor -serial ABCDGG")
 
