@@ -1,0 +1,30 @@
+- name: Troca de chaves entre servidores
+  hosts: webservers
+  become: true
+
+  tasks:
+
+    - name: Gera chaves 
+      user:
+        name: "{{username}}"
+        generate_ssh_key: yes
+        ssh_key_type: rsa
+        ssh_key_bits: 4096
+        ssh_key_file: .ssh/id_rsa
+        force: no
+       
+    - name: Copia chaves para Buffer
+      fetch:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "buffer/{{inventory_hostname}}-id_rsa.pub"
+        flat: yes
+      become: yes
+      become_user: "{{username}}"
+      
+    - name: Copia chaves para os servidores
+      authorized_key:
+        user: "{{username}}"
+        state: present
+        key: "{{ lookup('file', 'buffer/{{item}}-id_rsa.pub') }}"
+      with_items:
+        - "{{ groups['webservers'] }}"
