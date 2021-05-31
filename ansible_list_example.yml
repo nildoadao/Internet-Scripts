@@ -1,0 +1,17 @@
+---
+  name: converte uma string em lista
+  hosts: localhost
+
+  tasks:
+    - name: coleta a variavel servers e transforma numa lista
+      set_fact:
+        kafka_servers_list: "{{ kafka_servers.split(',') }}"
+        zookeeper_servers_list: "{{ zookeeper_servers.split(',') }}"
+          
+    - name: cria um arquivo template
+      template:
+        src: /templates/kafka_example.j2
+        dest: buffer/kafka.conf
+        group: root
+        mode: '0644'
+

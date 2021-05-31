@@ -1,0 +1,7 @@
+{% for item in kafka_servers_list %}
+server kafka {{ item }} id = {{ loop.index - 1}}
+{% endfor %}
+{% for item in zookeeper_servers_list %}
+server zookeeper {{ item }} id = {{ loop.index }}
+{% endfor %}
+
