@@ -1,0 +1,110 @@
+---
+- hosts: kube
+  tasks:
+    - name: Inicia variaveis antes
+      set_fact: 
+        mounts_antes: "{{ mounts_antes | default({})}}"
+        interfaces_antes: "{{ interfaces_antes | default({}) }}"
+        lista_interfaces_antes: "{{ ansible_interfaces }}"   
+        lista_mounts_antes: "{{ lista_mounts_antes | default([]) }}"  
+
+    - name: Levamento informações dos mounts
+      set_fact:
+        mounts_antes: "{{ mounts_antes | combine ({ item['device'] : item['mount']}) }}"
+        lista_mounts_antes: "{{ lista_mounts_antes + [ item['device'] ] }}"
+      loop: "{{ ansible_mounts }}"
+      when: item['fstype'] == 'cifs' or item['fstype'] == 'nfs'
+
+    - name: Levamento informações das interfaces
+      set_fact:
+        interfaces_antes: "{{ interfaces_antes | combine ({ item : vars['ansible_' + item]}) }}"
+      loop: "{{ ansible_interfaces }}"
+
+    - name: Reinicia servidor
+      shell: shutdown -r  
+
+    - name: Aguarda voltar do boot
+      wait_for_connection: 
+        delay: 90
+        timeout: 300
+
+    - name: Aguarda ficar acessivel
+      wait_for: 
+        port: 22
+        timeout: 300
+
+    - name: Coleta novamente os fatos
+      setup:
+
+    - name: Levantamento estado dos mounts
+      set_fact: 
+        mounts_depois: "{{ ansible_mounts }}"
+        interfaces_depois: "{{ interfaces_depois | default({}) }}"
+        lista_interfaces_depois: "{{ ansible_interfaces }}"
+        lista_mounts_depois: "{{ lista_mounts_depois | default({}) }}"
+
+    - name: Levamento informações dos mounts
+      set_fact:
+        mounts_depois: "{{ mounts_depois | combine ({ item['device'] : item['mount']}) }}"
+        lista_mounts_depois: "{{ lista_mounts_depois + [ item['device'] ] }}"
+      loop: "{{ ansible_mounts }}"
+      when: item['fstype'] == 'cifs' or item['fstype'] == 'nfs'
+
+    - name: Levamento informações das interfaces
+      set_fact:
+        interfaces_depois: "{{ interfaces_depois | combine ({ item : vars['ansible_' + item]}) }}"
+      loop: "{{ ansible_interfaces }}"
+
+    - name: Inicia verificação do estado após o boot
+      set_fact:
+        interfaces_status: "{{ interfaces_status | default([]) }}"
+        mounts_status: "{{ mounts_status | default([]) }}"
+        diff_interfaces: "{{ diff_interfaces | default([]) }}"
+        equal_interfaces: "{{ equal_interfaces | default([]) }}"
+        diff_mounts: "{{ diff_mounts | default([]) }}"
+
+    - name: Compara mounts antes -> depois
+      set_fact:
+        diff_mounts: "{{ diff_mounts + [ item ] }}"
+      loop: "{{ lista_mounts_antes }}"
+      when: item not in lista_mounts_depois
+
+    - name: Lista diferenças mounts
+      set_fact:
+        mounts_status: "{{ mounts_status + ['Erro: Mount ' + item + ',' + mounts_antes[item] + ' não subiu após o boot'] }}"
+      with_items: "{{ diff_mounts }}"
+
+    - name: Compara interfaces antes -> depois
+      set_fact:
+        diff_interfaces: "{{ diff_interfaces + [ item ] }}"
+      loop: "{{ lista_interfaces_antes }}"
+      when: item not in lista_interfaces_depois
+
+    - name: Compara interfaces antes -> depois
+      set_fact:
+        equal_interfaces: "{{ equal_interfaces + [ item ] }}"
+      loop: "{{ lista_interfaces_antes }}"
+      when: item in lista_interfaces_depois and item != 'lo'
+
+    - name: Lista diferenças
+      set_fact:
+        interfaces_status: "{{ interfaces_status + ['Erro: ' + interfaces_antes[item]['device'] + ' não subiu após o boot'] }}"
+      with_items: "{{ diff_interfaces }}"
+
+    - name: Valida IP das interfaces
+      set_fact:
+        interfaces_status: "{{ interfaces_status + ['Erro: IP mudou na interface ' + item] }}"
+      with_items: "{{ equal_interfaces }}"
+      when: interfaces_antes[item]['ipv4']['address'] != interfaces_depois[item]['ipv4']['address']
+
+    - name: Valida Mac Addrress das interfaces
+      set_fact:
+        interfaces_status: "{{ interfaces_status + ['Erro: Mac Address mudou na interface ' + item] }}"
+      with_items: "{{ equal_interfaces }}"
+      when: interfaces_antes[item]['macaddress'] != interfaces_depois[item]['macaddress']
+
+    - debug:
+        msg: "{{ mounts_status }}"
+
+    - debug:
+        msg: "{{ interfaces_status }}"
