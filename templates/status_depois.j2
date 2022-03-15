@@ -1,0 +1,10 @@
+{% for host in groups['kube'] %}
+*************************************************************
+{% if hostvars[host]['mounts_status'] is defined and hostvars[host]['interfaces_status'] is defined %}
+Servidor {{ host }} {{ hostvars[host]['mounts_status'] }}
+Servidor {{ host }} {{ hostvars[host]['interfaces_status'] }}
+{% else %}
+Servidor {{ host }} Não voltou após o reboot ou não concluiu o update
+{% endif %}  
+*************************************************************
+{% endfor %}

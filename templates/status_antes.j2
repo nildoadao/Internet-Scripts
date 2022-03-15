@@ -1,0 +1,13 @@
+{% for host in groups['kube'] %}
+*************************************************************
+{% if %}
+{% for mount in hostvars[host]['mounts_antes'] %}
+Servidor {{ host }} Mount: {{ mount }}
+{% endfor %}
+{% for interface in hostvars[host]['lista_interfaces_antes'] %}
+{% if hostvars[host]['interfaces_antes'][interface]['device'] != 'lo'%}
+Servidor {{ host }} interface: {{ hostvars[host]['interfaces_antes'][interface]['device'],hostvars[host]['interfaces_antes'][interface]['ipv4']['address'],hostvars[host]['interfaces_antes'][interface]['macaddress'] }}
+{% endif %}
+{% endfor %}  
+*************************************************************
+{% endfor %}

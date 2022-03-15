@@ -20,6 +20,12 @@
         interfaces_antes: "{{ interfaces_antes | combine ({ item : vars['ansible_' + item]}) }}"
       loop: "{{ ansible_interfaces }}"
 
+    - name: Salva estado dos servidores
+      template:
+        src: templates/status_antes.j2
+        dest: /tmp/status_antes.log
+      delegate_to: localhost
+
     - name: Reinicia servidor
       shell: shutdown -r  
 
@@ -103,8 +109,18 @@
       with_items: "{{ equal_interfaces }}"
       when: interfaces_antes[item]['macaddress'] != interfaces_depois[item]['macaddress']
 
-    - debug:
-        msg: "{{ mounts_status }}"
+    - name: Valida Status geral Mounts
+      set_fact:
+        mounts_status: "{{mounts_status + ['Mounts OK']}}"
+      when: mounts_status | length == 0
 
-    - debug:
-        msg: "{{ interfaces_status }}"
+    - name: Valida Status geral Interfaces
+      set_fact:
+        interfaces_status: "{{interfaces_status + ['Intefaces OK']}}"
+      when: interfaces_status | length == 0
+
+    - name: Salva estado dos servidores
+      template:
+        src: templates/status_depois.j2
+        dest: /tmp/status_depois.log
+      delegate_to: localhost
