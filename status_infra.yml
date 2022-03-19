@@ -5,7 +5,7 @@
       set_fact: 
         mounts_antes: "{{ mounts_antes | default({})}}"
         interfaces_antes: "{{ interfaces_antes | default({}) }}"
-        lista_interfaces_antes: "{{ ansible_interfaces }}"   
+        lista_interfaces_antes: "{{ lista_interfaces_antes | default([]) }}"   
         lista_mounts_antes: "{{ lista_mounts_antes | default([]) }}"  
 
     - name: Levamento informações dos mounts
@@ -15,10 +15,16 @@
       loop: "{{ ansible_mounts }}"
       when: item['fstype'] == 'cifs' or item['fstype'] == 'nfs'
 
+    - name: Levantamento das interfaces antes
+      set_fact:
+        lista_interfaces_antes: "{{ lista_interfaces_antes + [ item ] }}"
+      loop: "{{ ansible_interfaces }}"
+      when: item != 'lo'
+
     - name: Levamento informações das interfaces
       set_fact:
         interfaces_antes: "{{ interfaces_antes | combine ({ item : vars['ansible_' + item]}) }}"
-      loop: "{{ ansible_interfaces }}"
+      loop: "{{ lista_interfaces_antes }}"
 
     - name: Salva estado dos servidores
       template:
@@ -60,6 +66,7 @@
       set_fact:
         interfaces_depois: "{{ interfaces_depois | combine ({ item : vars['ansible_' + item]}) }}"
       loop: "{{ ansible_interfaces }}"
+      when: (item | lower) != 'lo'
 
     - name: Inicia verificação do estado após o boot
       set_fact:

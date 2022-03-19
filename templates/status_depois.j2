@@ -1,10 +1,14 @@
-{% for host in groups['kube'] %}
 *************************************************************
+{% for host in groups['kube'] %}
 {% if hostvars[host]['mounts_status'] is defined and hostvars[host]['interfaces_status'] is defined %}
-Servidor {{ host }} {{ hostvars[host]['mounts_status'] }}
-Servidor {{ host }} {{ hostvars[host]['interfaces_status'] }}
+{% for mount in hostvars[host]['mounts_status']%}
+Servidor {{ host }} {{ mount }}
+{% endfor %}
+{% for interface in hostvars[host]['interfaces_status']%}
+Servidor {{ host }} {{ interface }}
+{% endfor %}
 {% else %}
-Servidor {{ host }} Não voltou após o reboot ou não concluiu o update
+Servidor {{ host }} Erro: Não voltou após o reboot ou não concluiu o update
 {% endif %}  
 *************************************************************
 {% endfor %}
