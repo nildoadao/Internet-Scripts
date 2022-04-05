@@ -23,8 +23,8 @@ function build_connection(){
 function close_connection(){
     global $connection;
 
-    if(connection != null){
-        mysqli_close(connection);
+    if($connection != null){
+        mysqli_close($connection);
     }
 }
 
