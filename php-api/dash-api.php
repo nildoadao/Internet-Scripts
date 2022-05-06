@@ -31,6 +31,11 @@ switch ($_SERVER["REQUEST_METHOD"]){
             $response_data = json_encode($result);
             echo $response_data;
         }
+        elseif(isset($_GET['get_all_servers'])){
+            $result = get_number_of_servers();
+            $response_data = json_encode($result);
+            echo $response_data;
+        }
         break;
     
     case 'POST':
@@ -146,6 +151,45 @@ function get_server_by_id($server_id){
     try{
         $statement = $connection->prepare($query);
         $statement->bind_param("i", $server_id);
+
+        if($statement === false){
+            echo "Falha ao conectar no banco";
+            http_response_code(500);
+            exit();
+        }
+        
+        $statement->execute();
+        $statement->store_result();
+        $result = array();
+
+        for( $i = 0; $i < $statement->num_rows; $i++ ){
+            $metadata = $statement->result_metadata();
+            $params = array();
+            while ($field = $metadata->fetch_field())
+            {
+                $params[] = &$result[$i][$field->name];
+            }
+            call_user_func_array(array($statement, 'bind_result'), $params);
+            $statement->fetch();
+        }
+
+        $statement->close();
+        close_connection($connection);
+        return $result;
+
+    } catch(Exception $e) {
+        echo "Falha ao conectar no banco" . $e->getMessage();
+        http_response_code(500);
+        close_connection($connection);
+        exit();
+    } 
+}
+
+function get_number_of_servers(){
+    $connection = build_connection();
+    $query = "SELECT COUNT(*) FROM hostdb";
+    try{
+        $statement = $connection->prepare($query);
 
         if($statement === false){
             echo "Falha ao conectar no banco";

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "Instance BD1 is running on node node1"
+echo "Instance BD2 is not running"
+echo "Service svc1 is running on instance(s) BD1"
+echo "Service svc2 is running on instance(s) BD1"
+echo "Listener LISTENER is enabled"
+echo "Listener LISTENER is running on node(s): node1,node2"
